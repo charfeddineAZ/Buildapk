@@ -1,0 +1,33 @@
+{
+  "name": "cloud-apk-factory",
+  "version": "1.0.0",
+  "private": true,
+  "description": "AI Universal APK Factory — build Android apps entirely in the cloud",
+  "type": "module",
+  "workspaces": [
+    "packages/*",
+    "services/*",
+    "apps/*"
+  ],
+  "scripts": {
+    "build": "tsc -b",
+    "typecheck": "tsc -b --noEmit false",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "lint": "tsc -b --noEmit",
+    "analyze:fixture": "tsx services/analyzer/src/cli.ts --path fixtures/sample-expo",
+    "dev:api": "tsx watch services/api/src/index.ts",
+    "dev:web": "cd apps/web && npm run dev"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^4.20260702.1",
+    "@types/node": "^22.20.1",
+    "tsx": "^4.19.2",
+    "typescript": "^5.6.3",
+    "vitest": "^2.1.8"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "license": "MIT"
+}

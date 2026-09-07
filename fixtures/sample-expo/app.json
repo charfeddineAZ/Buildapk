@@ -1,0 +1,16 @@
+{
+  "expo": {
+    "name": "CPAAutomator",
+    "slug": "cpaautomator",
+    "icon": "./assets/icon.png",
+    "splash": {
+      "image": "./assets/splash.png",
+      "resizeMode": "contain"
+    },
+    "android": {
+      "permissions": ["INTERNET"],
+      "minSdkVersion": 24,
+      "targetSdkVersion": 35
+    }
+  }
+}

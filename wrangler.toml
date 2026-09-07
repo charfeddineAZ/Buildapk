@@ -1,0 +1,29 @@
+name = "cloud-apk-factory-api"
+main = "services/api/src/index.ts"
+compatibility_date = "2024-09-23"
+compatibility_flags = ["nodejs_compat"]
+
+# Bindings used by the platform. Secrets are provided via `wrangler secret put`
+# (never committed). The Store is InMemoryStore in dev and SupabaseStore in prod.
+[vars]
+# PUBLIC config only
+ENVIRONMENT = "production"
+
+# Example secrets (set with `wrangler secret put <name>`):
+#   MASTER_SECRET        – TokenVault master key
+#   SUPABASE_URL         – https://xxxx.supabase.co
+#   SUPABASE_SERVICE_ROLE_KEY
+#   CF_ACCOUNT_ID
+#   CF_AI_TOKEN
+#   OPENAI_API_KEY
+#   WEBHOOK_URL
+
+# Object storage for artifacts (section 27) — temporary signed URLs.
+[[r2_buckets]]
+binding = "ARTIFACTS"
+bucket_name = "apk-factory-artifacts"
+
+# KV for cached analysis / sessions.
+[[kv_namespaces]]
+binding = "CACHE"
+id = "replace-with-kv-id"

@@ -1,0 +1,10 @@
+# Local dev bindings for `wrangler dev` / `npm run dev:api`.
+# Copy to .dev.vars and fill in. NEVER commit real secrets.
+MASTER_SECRET=local-dev-secret-change-me
+SUPABASE_URL=
+SUPABASE_SERVICE_ROLE_KEY=
+CF_ACCOUNT_ID=
+CF_AI_TOKEN=
+OPENAI_API_KEY=
+WEBHOOK_URL=
+PORT=8787

@@ -1,0 +1,49 @@
+# Dependencies
+node_modules/
+.pnp
+.pnp.js
+
+# Build output
+dist/
+build/
+.turbo/
+*.tsbuildinfo
+
+# Env / secrets
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Next.js
+apps/web/.next/
+apps/web/out/
+apps/web/coverage/
+
+# Test artifacts
+coverage/
+fixtures/**/node_modules/
+
+# Cloudflare
+.wrangler/
+.dev.vars
+
+# Editor
+.idea/
+.vscode/
+*.swp
+
+# Android artifacts (never committed)
+*.apk
+*.aab
+android/
