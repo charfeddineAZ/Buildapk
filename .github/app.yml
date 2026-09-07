@@ -1,0 +1,28 @@
+# GitHub App manifest for Cloud APK Factory (section 5).
+# This is the "Manifest flow" file an admin pastes at
+# https://github.com/settings/apps/new — it requests ONLY fine-grained,
+# repository-scoped permissions. Code write is omitted unless the user enables
+# Auto Fix / Create Fix PR (then we ask for contents:write at install time).
+name: Cloud APK Factory
+url: https://apk-factory.example.com
+description: Build Android APK/AAB in the cloud — analyze, auto-fix and build from any repo.
+public: false
+redirect_url: https://apk-factory.example.com/connect/github/callback
+callback_url: https://apk-factory.example.com/connect/github/callback
+hook_attributes:
+  url: https://apk-factory.example.com/webhooks/github
+  active: true
+default_permissions:
+  contents: read          # read repo source for analysis
+  actions: write          # dispatch builds (Route 2)
+  workflows: write        # manage build workflow
+  commit_status: write    # report build status
+  checks: read
+  pull_requests: write    # optional Auto Fix PR
+  issues: write           # optional
+  # contents: write is NOT requested by default (only when Auto Fix is enabled)
+default_events:
+  - push
+  - release
+# Repository selection is "All repositories" or "Selected" at install time — we
+# recommend Selected repositories so the blast radius stays minimal (§5).

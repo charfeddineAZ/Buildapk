@@ -1,0 +1,22 @@
+{
+  "name": "@apk-factory/api",
+  "version": "1.0.0",
+  "type": "module",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "exports": { ".": "./src/index.ts" },
+  "dependencies": {
+    "@apk-factory/types": "*",
+    "@apk-factory/logger": "*",
+    "@apk-factory/analyzer": "*",
+    "@apk-factory/orchestrator": "*",
+    "@apk-factory/quota-manager": "*",
+    "@apk-factory/repair-agent": "*",
+    "@apk-factory/validator": "*",
+    "@apk-factory/notification-service": "*",
+    "@apk-factory/github": "*",
+    "@apk-factory/build-core": "*",
+    "@apk-factory/quota-manager": "*"
+  },
+  "license": "MIT"
+}

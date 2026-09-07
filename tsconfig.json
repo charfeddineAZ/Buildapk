@@ -1,0 +1,17 @@
+{
+  "files": [],
+  "references": [
+    { "path": "packages/types" },
+    { "path": "packages/logger" },
+    { "path": "packages/security" },
+    { "path": "packages/build-core" },
+    { "path": "services/analyzer" },
+    { "path": "services/repair-agent" },
+    { "path": "services/quota-manager" },
+    { "path": "services/validator" },
+    { "path": "services/orchestrator" },
+    { "path": "services/notification-service" },
+    { "path": "services/github" },
+    { "path": "services/api" }
+  ]
+}

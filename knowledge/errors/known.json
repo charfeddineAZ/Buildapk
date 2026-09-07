@@ -1,0 +1,68 @@
+{
+  "version": 1,
+  "errors": [
+    {
+      "hash": "eresolve-react-native-dynamic",
+      "code": "ERESOLVE",
+      "framework": "expo",
+      "version": "53",
+      "environment": "node20-java17",
+      "pattern": "react-native-dynamic",
+      "error": "ERESOLVE unable to resolve dependency tree: react-native-dynamic peer react@18 conflicts with react@19",
+      "solution": "Install with --legacy-peer-deps",
+      "patch": { "level": 1, "file": ".npmrc", "target": "legacy-peer-deps", "value": "true", "description": "Set legacy-peer-deps=true in .npmrc", "risk": "low" },
+      "successRate": 0.97,
+      "occurrences": 412,
+      "lastSeen": "2026-08-01"
+    },
+    {
+      "hash": "gradle-daemon-crash",
+      "code": "GradleDaemon",
+      "framework": "any",
+      "environment": "docker",
+      "pattern": "Could not start Gradle daemon",
+      "error": "Could not start Gradle daemon — insufficient memory or stale daemon",
+      "solution": "Disable daemon and increase heap: org.gradle.daemon=false, org.gradle.jvmargs=-Xmx2048m",
+      "patch": { "level": 1, "file": "gradle.properties", "target": "org.gradle.daemon", "value": "false", "description": "Disable Gradle daemon in CI", "risk": "low" },
+      "successRate": 0.94,
+      "occurrences": 230,
+      "lastSeen": "2026-07-20"
+    },
+    {
+      "hash": "sdk-not-found",
+      "code": "SDKNotFound",
+      "framework": "any",
+      "environment": "android",
+      "pattern": "Failed to find Build Tools|Android SDK not found|compileSdk",
+      "error": "Android SDK / Build Tools not found for required compileSdk",
+      "solution": "Use a prebuilt environment image that already contains the SDK (GHCR builder).",
+      "successRate": 0.99,
+      "occurrences": 980,
+      "lastSeen": "2026-08-15"
+    },
+    {
+      "hash": "manifest-merge-failed",
+      "code": "ManifestMerge",
+      "framework": "any",
+      "environment": "android",
+      "pattern": "Manifest merger failed",
+      "error": "Manifest merger failed: uses-sdk minSdk > dependency maxSdk or conflicting permissions",
+      "solution": "Align minSdkVersion across modules or add tools:replace in AndroidManifest.",
+      "successRate": 0.88,
+      "occurrences": 64,
+      "lastSeen": "2026-06-30"
+    },
+    {
+      "hash": "keystore-missing",
+      "code": "KeystoreMissing",
+      "framework": "any",
+      "environment": "android",
+      "pattern": "Keystore file .* not found|RELEASE_STORE_FILE",
+      "error": "Production signing keystore is not configured.",
+      "solution": "Configure EAS credentials or provide a keystore via secrets. Build a debug APK in the meantime.",
+      "successRate": 0.7,
+      "occurrences": 150,
+      "lastSeen": "2026-08-02"
+    }
+  ]
+}

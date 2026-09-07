@@ -1,0 +1,17 @@
+{
+  "name": "@apk-factory/orchestrator",
+  "version": "1.0.0",
+  "type": "module",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "exports": { ".": "./src/index.ts" },
+  "dependencies": {
+    "@apk-factory/types": "*",
+    "@apk-factory/logger": "*",
+    "@apk-factory/build-core": "*",
+    "@apk-factory/quota-manager": "*",
+    "@apk-factory/repair-agent": "*",
+    "@apk-factory/validator": "*"
+  },
+  "license": "MIT"
+}
