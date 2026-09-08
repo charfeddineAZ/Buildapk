@@ -15,6 +15,10 @@ export interface GithubRepo {
   private: boolean;
 }
 
+/** Manifest / config files that drive the analysis (kept small on purpose). */
+export const ANALYSIS_FILE_RE = /(^|\/)(package\.json|app\.json|app\.config\.(js|ts|mjs)|eas\.json|capacitor\.config\.(json|ts|js)|ionic\.config\.json|pubspec\.yaml|settings\.gradle(\.kts)?|build\.gradle(\.kts)?|gradle\.properties|gradle-wrapper\.properties|AndroidManifest\.xml|\.npmrc|\.nvmrc|\.node-version|tsconfig\.json|metro\.config\.js|babel\.config\.js|pnpm-workspace\.yaml|turbo\.json|manifest\.webmanifest|index\.html)$/;
+export const ASSET_FILE_RE = /^(assets|android\/app\/src\/main\/res)\/.*\.(png|jpg|jpeg|webp|svg)$/i;
+
 export class GithubClient {
   constructor(
     private readonly token: string,
@@ -53,6 +57,45 @@ export class GithubClient {
     const data = await this.req<any | { repositories?: any[] }>("GET", path);
     const list = Array.isArray(data) ? data : (data.repositories ?? []);
     return list.map((r: any) => ({ fullName: r.full_name, defaultBranch: r.default_branch, private: r.private }));
+  }
+
+  /** Authenticated user (used after OAuth to label the connection). */
+  async me(): Promise<{ id: number; login: string; name: string | null; avatarUrl: string }> {
+    const u = await this.req<{ id: number; login: string; name: string | null; avatar_url: string }>("GET", "/user");
+    return { id: u.id, login: u.login, name: u.name, avatarUrl: u.avatar_url };
+  }
+
+  /** Recursive tree listing of a ref (paths only, no contents). */
+  async listTree(owner: string, repo: string, ref: string): Promise<{ path: string; type: "blob" | "tree"; size?: number; sha: string }[]> {
+    const r = await this.req<{ tree: { path: string; type: "blob" | "tree"; size?: number; sha: string }[]; truncated?: boolean }>("GET", `/repos/${owner}/${repo}/git/trees/${encodeURIComponent(ref)}?recursive=1`);
+    if (r.truncated) this.log.warn("tree listing truncated", { repo: `${owner}/${repo}` });
+    return r.tree;
+  }
+
+  /** Raw text content of a file at a ref. Returns null for 404. */
+  async getFileText(owner: string, repo: string, path: string, ref: string): Promise<string | null> {
+    const res = await fetch(`${this.base}/repos/${owner}/${repo}/contents/${path.split("/").map(encodeURIComponent).join("/")}?ref=${encodeURIComponent(ref)}`, {
+      headers: this.headers({ Accept: "application/vnd.github.raw+json" }),
+    });
+    if (res.status === 404) return null;
+    if (!res.ok) throw new Error(`GitHub GET contents/${path} → ${res.status}`);
+    return res.text();
+  }
+
+  /**
+   * Snapshot of the manifest files the Analyzer needs (§32: never the whole
+   * repo, never executed). Binary assets are listed with a placeholder so the
+   * asset checks work without downloading images.
+   */
+  async fetchAnalysisSnapshot(owner: string, repo: string, ref?: string): Promise<{ ref: string; files: Record<string, string> }> {
+    const branch = ref ?? (await this.getDefaultBranch(owner, repo));
+    const tree = await this.listTree(owner, repo, branch);
+    const files: Record<string, string> = {};
+    const wanted = tree.filter((t) => t.type === "blob" && ANALYSIS_FILE_RE.test(t.path) && (t.size ?? 0) < 512_000).slice(0, 60);
+    const texts = await Promise.all(wanted.map((t) => this.getFileText(owner, repo, t.path, branch).catch(() => null)));
+    wanted.forEach((t, i) => { if (texts[i] !== null) files[t.path] = texts[i] as string; });
+    for (const t of tree) if (t.type === "blob" && ASSET_FILE_RE.test(t.path)) files[t.path] = `<binary ${t.size ?? 0} bytes>`;
+    return { ref: branch, files };
   }
 
   async getDefaultBranch(owner: string, repo: string): Promise<string> {

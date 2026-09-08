@@ -79,3 +79,5 @@ export function summarizeAttempts(attempts: BuildAttempt[]): Pick<BuildResult, "
   if (last.status === "success") return { status: "success", provider: last.provider };
   return { status: "failed", provider: last.provider, failureReason: last.logs.slice(-500) };
 }
+
+export * from "./signing.js";

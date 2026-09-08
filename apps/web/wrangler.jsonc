@@ -1,0 +1,20 @@
+{
+  // Web app (Next.js via OpenNext) deployed as a Cloudflare Worker.
+  //   npm run deploy  (from apps/web)   or   npm run deploy:web  (from repo root)
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "cloud-apk-factory-web",
+  "main": ".open-next/worker.js",
+  "compatibility_date": "2025-05-05",
+  "compatibility_flags": ["nodejs_compat", "global_fetch_strictly_public"],
+  "assets": {
+    "directory": ".open-next/assets",
+    "binding": "ASSETS"
+  },
+  "observability": { "enabled": true },
+  "vars": {
+    // Public URL of the API Worker. Baked into the client bundle at build time
+    // via NEXT_PUBLIC_API_URL (see next.config.mjs); this var is the runtime
+    // fallback for server-side code.
+    "NEXT_PUBLIC_API_URL": "https://cloud-apk-factory-api.<your-subdomain>.workers.dev"
+  }
+}

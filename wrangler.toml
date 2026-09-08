@@ -3,22 +3,33 @@ main = "services/api/src/index.ts"
 compatibility_date = "2024-09-23"
 compatibility_flags = ["nodejs_compat"]
 
-# Bindings used by the platform. Secrets are provided via `wrangler secret put`
-# (never committed). The Store is InMemoryStore in dev and SupabaseStore in prod.
+# ── Zero-Manual-Config ───────────────────────────────────────────────────────
+# Everything the platform needs is either a PUBLIC var below or a SECRET set
+# with `npx wrangler secret put <NAME>`. Run `npm run setup` for an interactive
+# walkthrough, or open GET /setup/status on the deployed API to see exactly
+# what is missing and the command that fixes it.
 [vars]
-# PUBLIC config only
 ENVIRONMENT = "production"
+# Public URL of this Worker (used to build OAuth callbacks + signed artifact URLs).
+API_PUBLIC_URL = "https://cloud-apk-factory-api.<your-subdomain>.workers.dev"
+# Public URL of the web app Worker (apps/web) — OAuth redirects land here.
+WEB_ORIGIN = "https://cloud-apk-factory-web.<your-subdomain>.workers.dev"
+# Cloudflare account id (Workers AI). Not a secret.
+CF_ACCOUNT_ID = ""
 
-# Example secrets (set with `wrangler secret put <name>`):
-#   MASTER_SECRET        – TokenVault master key
-#   SUPABASE_URL         – https://xxxx.supabase.co
-#   SUPABASE_SERVICE_ROLE_KEY
-#   CF_ACCOUNT_ID
-#   CF_AI_TOKEN
-#   OPENAI_API_KEY
-#   WEBHOOK_URL
+# Secrets (never committed) — `npx wrangler secret put <name>`:
+#   MASTER_SECRET              – TokenVault / sessions / signed URLs   (required)
+#   GITHUB_CLIENT_ID           – GitHub OAuth App                       (required for real login)
+#   GITHUB_CLIENT_SECRET       – GitHub OAuth App                       (required for real login)
+#   GITHUB_WEBHOOK_SECRET      – HMAC for push/release webhooks         (recommended)
+#   SUPABASE_URL               – https://xxxx.supabase.co               (recommended)
+#   SUPABASE_SERVICE_ROLE_KEY  –                                        (recommended)
+#   CF_AI_TOKEN                – Workers AI token for the repair agent  (optional)
+#   OPENAI_API_KEY             – strong AI tier                         (optional)
+#   WEBHOOK_URL                – Slack/Discord notifications            (optional)
+#   GITHUB_TOKEN               – platform fallback token                (optional)
 
-# Object storage for artifacts (section 27) — temporary signed URLs.
+# Object storage for artifacts (section 27) — delivered via HMAC-signed temporary URLs.
 [[r2_buckets]]
 binding = "ARTIFACTS"
 bucket_name = "apk-factory-artifacts"
@@ -27,3 +38,6 @@ bucket_name = "apk-factory-artifacts"
 [[kv_namespaces]]
 binding = "CACHE"
 id = "replace-with-kv-id"
+
+[observability]
+enabled = true

@@ -20,8 +20,14 @@ if [ -n "${EXPO_TOKEN:-}" ]; then
 else
   echo ">> No EXPO_TOKEN — local prebuild + Gradle (debug APK)"
   npx expo prebuild --platform android --non-interactive || true
+  # Zero-config release signing (keystore from vault, generated on first build)
+  bash "$(dirname "$0")/../common/sign.sh" android || true
   cd android
-  ./gradlew assembleDebug || ./gradlew assembleRelease
+  if [ -n "${UPLOAD_STORE_PASSWORD:-}" ]; then
+    ./gradlew --init-script apk-factory-signing.gradle assembleRelease || ./gradlew assembleDebug
+  else
+    ./gradlew assembleDebug || ./gradlew assembleRelease
+  fi
   cp app/build/outputs/apk/debug/*.apk "$OUT_DIR/app.apk" 2>/dev/null || \
   cp app/build/outputs/apk/release/*.apk "$OUT_DIR/app.apk"
 fi

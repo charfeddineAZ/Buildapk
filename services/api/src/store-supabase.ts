@@ -8,6 +8,8 @@
  */
 
 import type { BuildResult, ConnectedAccount, ProjectAnalysis } from "@apk-factory/types";
+import type { SigningRecord, SigningStore } from "@apk-factory/build-core";
+import type { SecretRecord, SecretScope, SecretStore } from "./secrets.js";
 import type { Project, StoredBuild, Store, UserAccount } from "./store.js";
 
 export class SupabaseStore implements Store {
@@ -28,7 +30,9 @@ export class SupabaseStore implements Store {
       body: body ? JSON.stringify(body) : undefined,
     });
     if (!res.ok) throw new Error(`supabase ${table} ${method} ${res.status}: ${await res.text()}`);
-    return (await res.json()) as T;
+    const text = await res.text();
+    if (!text) return (method === "GET" ? [] : {}) as T;
+    return JSON.parse(text) as T;
   }
 
   users = {
@@ -38,7 +42,30 @@ export class SupabaseStore implements Store {
   };
   accounts = {
     list: async (userId: string) => this.rpc<ConnectedAccount[]>("connected_accounts", "GET", undefined, `?user_id=eq.${userId}`),
-    put: async (a: ConnectedAccount) => { await this.rpc("connected_accounts", "POST", a); },
+    put: async (a: ConnectedAccount) => {
+      await this.rpc("connected_accounts", "DELETE", undefined, `?user_id=eq.${a.userId}&provider=eq.${a.provider}`);
+      await this.rpc("connected_accounts", "POST", { user_id: a.userId, provider: a.provider, external_id: a.externalId, email: a.email, scopes: a.scopes, status: a.status, connected_at: a.connectedAt, expires_at: a.expiresAt });
+    },
+    remove: async (userId: string, provider: ConnectedAccount["provider"]) => { await this.rpc("connected_accounts", "DELETE", undefined, `?user_id=eq.${userId}&provider=eq.${provider}`); },
+  };
+  // Sealed signing credentials (database/migrations/0002_zero_config.sql).
+  signing: SigningStore = {
+    get: async (projectId: string) => (await this.rpc<{ record: SigningRecord }[]>("project_signing", "GET", undefined, `?project_id=eq.${projectId}&limit=1`))[0]?.record,
+    put: async (r: SigningRecord) => {
+      await this.rpc("project_signing", "DELETE", undefined, `?project_id=eq.${r.projectId}`);
+      await this.rpc("project_signing", "POST", { project_id: r.projectId, record: r, updated_at: new Date().toISOString() });
+    },
+    delete: async (projectId: string) => { await this.rpc("project_signing", "DELETE", undefined, `?project_id=eq.${projectId}`); },
+  };
+  // Sealed secrets (values are AES-256-GCM envelopes; the DB never sees plaintext).
+  secrets: SecretStore = {
+    list: async (scope: SecretScope, ownerId: string) => this.rpc<SecretRecord[]>("secrets", "GET", undefined, `?scope=eq.${scope}&owner_id=eq.${ownerId}`).then((rows) => rows.map(fromSecretRow)),
+    get: async (scope: SecretScope, ownerId: string, name: string) => (await this.rpc<any[]>("secrets", "GET", undefined, `?scope=eq.${scope}&owner_id=eq.${ownerId}&name=eq.${name}&limit=1`)).map(fromSecretRow)[0],
+    put: async (r: SecretRecord) => {
+      await this.rpc("secrets", "DELETE", undefined, `?scope=eq.${r.scope}&owner_id=eq.${r.ownerId}&name=eq.${r.name}`);
+      await this.rpc("secrets", "POST", { id: r.id, scope: r.scope, owner_id: r.ownerId, name: r.name, sealed: r.sealed, meta: r.meta, created_at: r.createdAt, updated_at: r.updatedAt, last_used_at: r.lastUsedAt });
+    },
+    delete: async (scope: SecretScope, ownerId: string, name: string) => { await this.rpc("secrets", "DELETE", undefined, `?scope=eq.${scope}&owner_id=eq.${ownerId}&name=eq.${name}`); },
   };
   projects = {
     get: async (id: string) => (await this.rpc<Project[]>("projects", "GET", undefined, `?id=eq.${id}&limit=1`))[0],
@@ -60,6 +87,10 @@ export class SupabaseStore implements Store {
       if (b.result.artifacts) for (const art of b.result.artifacts) await this.rpc("artifacts", "POST", { build_id: b.id, ...art });
     },
   };
+}
+
+function fromSecretRow(row: any): SecretRecord {
+  return { id: row.id, scope: row.scope, ownerId: row.owner_id ?? row.ownerId, name: row.name, sealed: row.sealed, meta: row.meta ?? {}, createdAt: row.created_at ?? row.createdAt, updatedAt: row.updated_at ?? row.updatedAt, lastUsedAt: row.last_used_at ?? row.lastUsedAt };
 }
 
 export type { UserAccount, Project, StoredBuild, ProjectAnalysis, BuildResult };

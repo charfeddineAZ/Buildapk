@@ -74,19 +74,6 @@ GitHub repo (files)
 | 25 | Real-device smoke test | `services/validator/src/smoke.ts` `planSmokeTest` + `staticSmokeTest` |
 | 26 | Dangerous-permission scanner | `packages/security/src/index.ts` `scanDangerousPermissions` (wired into Analyzer) |
 | 30 | Scheduled builds | `services/quota-manager/src/cron.ts` `parseCron`/`matchesCron`/`nextRun` |
-| 44 | Auto versioning | `services/build-core/src/version.ts` `bumpVersion` |
-| 44 | GitHub App integration | `services/github/src/index.ts` `GithubClient` (repos/PR/webhook/dispatch) |
-| 44 | Play Store distribution | `services/api/src/deploy.ts` `PlayStoreClient` (edits/bundles/tracks) |
-| 41 | Deploy | `.github/workflows/deploy.yml` (Pages + Wrangler) |
-
-## Stage 8 additions (advanced)
-
-| Spec | Concept | Implementation |
-|---|---|---|
-| 22 | Auto Fix PR on isolated branch | `services/repair-agent/src/branch.ts` `RepairBranchService` (applies safe patches only, excludes high-risk) |
-| 25 | Real-device smoke test | `services/validator/src/smoke.ts` `planSmokeTest` + `staticSmokeTest` |
-| 26 | Dangerous-permission scanner | `packages/security/src/index.ts` `scanDangerousPermissions` (wired into Analyzer) |
-| 30 | Scheduled builds | `services/quota-manager/src/cron.ts` `parseCron`/`matchesCron`/`nextRun` |
 | 34 | Audit log | `services/api/src/audit.ts` `AuditService` + `GET /audit` |
 | 35 | Usage tracking | `services/quota-manager/src/usage.ts` `UsageService` (fed by `QuotaManager.onConsume`) + `GET /usage` |
 | 44 | Auto versioning | `services/build-core/src/version.ts` `bumpVersion` |
@@ -95,6 +82,23 @@ GitHub repo (files)
 | 44 | GitHub App integration | `services/github/src/index.ts` `GithubClient` (repos/PR/webhook/dispatch) |
 | 44 | Play Store distribution | `services/api/src/deploy.ts` `PlayStoreClient` (edits/bundles/tracks) |
 | 41 | Deploy | `.github/workflows/deploy.yml` (Pages + Wrangler) |
+
+## Zero-Manual-Config additions
+
+| Spec | Concept | Implementation |
+|---|---|---|
+| 3 | Real GitHub OAuth (authorization-code) | `services/api/src/oauth-github.ts` `GithubOAuth`; routes `/auth/github/start` + `/auth/github/callback` |
+| 3 | Stateless signed sessions + OAuth state | `services/api/src/session.ts` `SessionService` (HMAC-SHA256, Web Crypto) |
+| 4 | Connection center with live probes | `services/api/src/setup.ts` `connectionsView` + `probeGithub`; `GET /connections?probe=1`, `DELETE /connections/:p` |
+| 6 | Secrets manager (user/project/connection scope) | `services/api/src/secrets.ts` `SecretsService` (vault-sealed, masked previews, `envFor()` build injection) |
+| 7 | Repository import from GitHub | `GithubClient.fetchAnalysisSnapshot` (manifests only, §32) → `POST /projects/import`, `GET /github/repos` |
+| 22 | Diff preview + approval before any patch | `services/repair-agent/src/diff.ts` `previewPatches`/`unifiedDiff`; `GET/POST /projects/:id/repairs/preview`, `POST …/repairs/apply`; `apps/web/components/DiffPreview.tsx` |
+| 27 | R2 artifact storage + signed temporary URLs | `services/api/src/storage.ts` `R2ArtifactStore`/`ArtifactSigner`/`ArtifactService`; `GET /artifacts/:key?exp&sig`, `POST /artifacts/refresh` |
+| 30 | Webhook signature verification | `setup.ts` `verifyGithubSignature` (X-Hub-Signature-256) |
+| 44 | Zero-config release signing | `packages/build-core/src/signing.ts` `SigningService` (sealed passwords, keystore sealed after first build, rotate/export) + `builders/common/sign.sh` (keytool + Gradle init script) |
+| 44 | Setup wizard + platform status | `setup.ts` `platformStatus`/`userChecklist`; `GET /setup/status`, `GET /setup/checklist`; `apps/web/app/setup`, `/status`; `scripts/setup.mjs` (`npm run setup`) |
+| 41 | Web on Cloudflare Workers | `apps/web/open-next.config.ts` + `apps/web/wrangler.jsonc` (OpenNext adapter, Next 15) |
+| 33 | Persistence for the above | `database/migrations/0002_zero_config.sql` (`project_signing`, `secrets`) + `SupabaseStore` |
 
 ## Why it is resilient
 

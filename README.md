@@ -64,7 +64,7 @@ cloud-apk-factory/
 
 ```bash
 npm install                 # يثبّت كل مساحات العمل
-npm test                   # 39 اختبار للخدمات الأساسية (vitest)
+npm test                   # 96 اختباراً للخدمات الأساسية (vitest)
 npx tsc -b                 # فحص الأنواع لكل الخدمات
 
 # بوابة الـ API (Worker) على http://localhost:8787
@@ -72,6 +72,8 @@ npm run dev:api
 
 # واجهة الويب على http://localhost:3000
 npm run dev:web
+# (اختياري) واجهة تتحدث مع الـ API عبر نفس الأصل /api — مفيد للمعاينات:
+#   API_PROXY_TARGET=http://localhost:8787 npm --prefix apps/web run dev
 
 # تحليل مستودع تجريبي عبر CLI المحلّل
 npm run analyze:fixture
@@ -97,6 +99,45 @@ curl -X POST localhost:8787/projects/analyze -H 'content-type: application/json'
 # 3) بناء APK
 curl -X POST localhost:8787/projects/<projectId>/build -d '{"target":"apk"}'
 ```
+
+---
+
+## 🧙 الإعداد بلا تهيئة يدوية (Zero-Manual-Config)
+
+المنصّة **لا تحتاج تعديل ملفات بيدك**. كل ما تحتاجه إمّا متغيّر عام في `wrangler.toml`
+أو Secret يُرفع بـ `wrangler secret put`، والمنصّة نفسها تخبرك بما ينقص وبالأمر الذي يصلحه.
+
+```bash
+npm run setup            # معالج تفاعلي: R2 + KV + الأسرار + النشر (API + Web) + التحقق
+npm run setup:check      # فحص غير تفاعلي (مناسب لـ CI)
+npm run deploy           # نشر الـ API (Worker) + الواجهة (Worker عبر OpenNext)
+```
+
+| الشاشة | المسار | ما تفعله |
+|---|---|---|
+| **Setup** | `/setup` | قائمة خطوات المستخدم (دخول → GitHub → مستودع → بناء) + حالة كل قدرة بالمنصّة مع أمر الإصلاح |
+| **Status** | `/status` ← `GET /setup/status` | صفحة حالة عامة: Vault، R2، DB، OAuth، Webhooks، AI، إشعارات، KV |
+| **Connections** | `/connections` | GitHub عبر **OAuth حقيقي**، Expo/Play/Cloudflare عبر Token مختوم، اختبار حيّ (`?probe=1`)، فصل |
+| **Secrets** | `/settings/secrets` | أسرار على مستوى الحساب أو المشروع (AES-256-GCM) تُحقن كمتغيّرات بيئة للبناء — لا تُعرض إلا مقنّعة |
+| **Signing** | `/settings/signing` | توقيع إصدار تلقائي لكل مشروع: كلمات مرور مختومة، keystore يُولَّد داخل أول بناء ويُختم، تصدير/تدوير |
+| **Fix preview (§22)** | `/projects/:id` → تبويب *Fix preview* | كل إصلاح كـ **unified diff** قبل تطبيقه؛ الموافقة اختيارية لكل ملف؛ لا يُمسّ المستودع |
+
+### تسجيل دخول GitHub الحقيقي
+
+1. أنشئ OAuth App في `github.com/settings/developers` بعنوان رجوع
+   `https://<API_PUBLIC_URL>/auth/github/callback`.
+2. `npx wrangler secret put GITHUB_CLIENT_ID` و `GITHUB_CLIENT_SECRET`.
+3. عيّن `API_PUBLIC_URL` و `WEB_ORIGIN` في `wrangler.toml` (يفعلها `npm run setup`).
+
+التدفّق: `GET /auth/github/start` → GitHub → `GET /auth/github/callback` → يُختم الـ token في الخزنة،
+تُنشأ جلسة موقّعة (HMAC) وتُعاد للواجهة في **fragment** (`#token=`) فلا تصل إلى أي سجلّ خادم.
+النطاقات المطلوبة قراءة فقط (`public_repo`, `workflow`)؛ صلاحية الكتابة تُطلب فقط عند تفعيل Auto-Fix PR.
+
+### التخزين (R2) والروابط المؤقّتة
+
+الـ APK/AAB/السجلات/التقارير تُحفظ في R2 (binding `ARTIFACTS`) وتُسلَّم عبر
+`GET /artifacts/:key?exp&sig` — روابط موقّعة HMAC-SHA256 بصلاحية ساعة (حد أقصى 24h)،
+مع `x-artifact-sha256` للتحقق. بدون R2 (تطوير محلي) يُستخدم مخزن ذاكرة بنفس الواجهة.
 
 ---
 
@@ -147,6 +188,7 @@ curl -X POST localhost:8787/projects/<projectId>/build -d '{"target":"apk"}'
 
 - [x] **المرحلة 1–6**: أساس + GitHub + Analyzer + Build Engine + Auto Repair + Validation
 - [~] **المرحلة 7**: تحسين — Quota Manager ✅، Build Router ✅، Cache (طبقات Docker/GHCR) ✅؛ التحليل المتوازي + إعادة استخدام البيئات قيد التحسين
-- [~] **المرحلة 8**: متقدّم — Auto PR ✅، Auto versioning ✅، فاحص أذونات ✅، محاكاة تشغيل ✅، جدولة ✅، نشر Play Store (عميل) ✅، إشعارات ✅، AAB/متغيّرات ✅، Flutter/Capacitor (سكربتات) ✅، توقيع تلقائي (تهيئة+خزنة) ✅، سجل تدقيق ✅، تتبّع الحصص ✅، iOS (مسار+سكربت) ✅؛ التوقيع الفعلي عبر keytool في البيئة + تشغيل محاكي حقيقي متبقٍ
+- [~] **المرحلة 8**: متقدّم — Auto PR ✅، Auto versioning ✅، فاحص أذونات ✅، محاكاة تشغيل ✅، جدولة ✅، نشر Play Store (عميل) ✅، إشعارات ✅، AAB/متغيّرات ✅، Flutter/Capacitor (سكربتات) ✅، توقيع تلقائي كامل (خزنة + keytool داخل البيئة + ختم الـ keystore) ✅، سجل تدقيق ✅، تتبّع الحصص ✅، iOS (مسار+سكربت) ✅؛ تشغيل محاكي حقيقي متبقٍ
+- [x] **Zero-Manual-Config**: معالج إعداد ✅، حالة المنصّة ✅، OAuth GitHub حقيقي ✅، جلسات موقّعة ✅، مدير أسرار ✅، R2 + روابط موقّعة ✅، معاينة فرق الإصلاح (§22) ✅، نشر الواجهة على Workers (OpenNext) ✅
 
 انظر [`ARCHITECTURE.md`](./ARCHITECTURE.md) للربط التفصيلي بين كل قسم من التصميم والكود.
