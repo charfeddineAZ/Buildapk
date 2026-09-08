@@ -1,10 +1,21 @@
 # Local dev bindings for `wrangler dev` / `npm run dev:api`.
 # Copy to .dev.vars and fill in. NEVER commit real secrets.
+ENVIRONMENT=development
 MASTER_SECRET=local-dev-secret-change-me
+API_PUBLIC_URL=http://localhost:8787
+WEB_ORIGIN=http://localhost:3000
+
+# Real GitHub login (github.com/settings/developers → OAuth App,
+# callback = http://localhost:8787/auth/github/callback)
+GITHUB_CLIENT_ID=
+GITHUB_CLIENT_SECRET=
+GITHUB_WEBHOOK_SECRET=
+
 SUPABASE_URL=
 SUPABASE_SERVICE_ROLE_KEY=
 CF_ACCOUNT_ID=
 CF_AI_TOKEN=
 OPENAI_API_KEY=
 WEBHOOK_URL=
+GITHUB_TOKEN=
 PORT=8787

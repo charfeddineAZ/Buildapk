@@ -254,10 +254,12 @@ export interface ApkValidation {
 // Connections / accounts
 // ──────────────────────────────────────────────────────────────────────────
 
-export type Provider = "google" | "github" | "expo" | "cloudflare" | "supabase";
+export type Provider = "google" | "github" | "expo" | "cloudflare" | "supabase" | "google-play";
 
 export interface ConnectedAccount {
   provider: Provider;
+  /** Owning platform user (undefined for legacy rows). */
+  userId?: string;
   externalId: string;
   email?: string;
   scopes: string[];

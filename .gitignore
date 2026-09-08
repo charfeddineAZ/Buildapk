@@ -36,6 +36,8 @@ fixtures/**/node_modules/
 
 # Cloudflare
 .wrangler/
+apps/web/.open-next/
+apps/web/cloudflare-env.d.ts
 .dev.vars
 
 # Editor

@@ -8,6 +8,11 @@ cd "$REPO_DIR"
 npm install --legacy-peer-deps || npm install
 npx cap sync android
 cd android
-./gradlew assembleRelease
+bash "$(dirname "$0")/../common/sign.sh" . || true
+if [ -n "${UPLOAD_STORE_PASSWORD:-}" ]; then
+  ./gradlew --init-script apk-factory-signing.gradle assembleRelease
+else
+  ./gradlew assembleRelease
+fi
 cp app/build/outputs/apk/release/*.apk "$OUT_DIR/app.apk"
 echo ">> Artifacts:"; ls -la "$OUT_DIR"
